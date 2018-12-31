@@ -175,6 +175,9 @@ end
 print("Connecting...")
 IRC:connect(cfg.irc_server, cfg.irc_port)
 
+
+IRC:send(("MODE %s +B"):format(IRC.nick))
+
 for _,chan in ipairs(cfg.channels) do
 	print("Joining " .. chan .. "...")
 	IRC:join(chan)
