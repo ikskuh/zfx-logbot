@@ -38,6 +38,11 @@ function parse_and_exec_cmd(user, channel, message)
 			IRC:sendChat(user.nick, r)
 		else
 			IRC:sendChat(channel, r)
+			DO_LOG {
+				channel=channel,
+				nick=IRC.nick,
+				message=r
+			}
 		end
 	end
 
@@ -49,12 +54,24 @@ function parse_and_exec_cmd(user, channel, message)
 			IRC:send("PRIVMSG %s :\001ACTION %s\001", verify(user.nick, 3), r)
 		else
 			IRC:send("PRIVMSG %s :\001ACTION %s\001", channel, r)
+			DO_LOG {
+				channel=channel,
+				nick=IRC.nick,
+				message=("\001ACTION %s\001"):format(r)
+			}
 		end
 	end
 
 	function context:privmsg(...)
 		local r = packtext(...)
 		IRC:sendChat(user.nick, r)
+	end
+
+	function context:sendto(target, msg)
+		IRC:sendChat(target, msg)
+		if target:sub(1,1) == "#" then
+			DO_LOG { channel=target, nick=IRC.nick, message=msg}
+		end
 	end
 
 	-- remove '!' if exists

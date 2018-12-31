@@ -87,6 +87,11 @@ local log_msg_stmt = DB:prepare [[
 	INSERT INTO chatlog (channel, nick, message)
 		VALUES (:channel, :nick, :message)
 ]]
+
+function DO_LOG(data)
+	assert(log_msg_stmt:bind(data):exec())
+end
+
 IRC:hook("OnChat", function(_user, _channel, _message)
 	local function process(user, channel, message)
 		-- if private chat and message is not a command
@@ -94,8 +99,12 @@ IRC:hook("OnChat", function(_user, _channel, _message)
 			message = "!" .. message
 		end
 
-		print(("[%s] %s: %s"):format(channel, user.nick, message))
+		if channel:sub(1,1) == "#" then
+			DO_LOG { channel=channel, nick=user.nick, message=message}
+		end
 
+		print(("[%s] %s: %s"):format(channel, user.nick, message))
+		local restarttext = ("!restart %s"):format(cfg.admintoken)
 		if message == "!reload" then
 			local success, errmsg = pcall(function()
 				command = { }
@@ -108,13 +117,10 @@ IRC:hook("OnChat", function(_user, _channel, _message)
 				print("Failed to reload:")
 				print(errmsg)
 			end
-		elseif channel:sub(1,1) ~= "#" and message == "!restart" then
+		elseif channel:sub(1,1) ~= "#" and message == restarttext then
 			QUIT = true
 		elseif message:sub(1,1) == '!' then
 			parse_and_exec_cmd(user, channel, message)
-		end
-		if channel:sub(1,1) == "#" and message:sub(1,1) ~= "!" then
-			log_msg_stmt:bind{ channel=channel, nick=user.nick, message=message}:exec()
 		end
 	end
 	local success, errmsg = pcall(process, _user, _channel, _message)
@@ -127,15 +133,19 @@ IRC:hook("OnJoin", function(user, channel)
 	CHANNELS[channel] = CHANNELS[channel] or { }
 	CHANNELS[channel][user] = true
 	print(("%s joined %s"):format(user.nick, channel))
+	DO_LOG { channel=channel, nick="*join", message=user.nick}
 end)
 
 IRC:hook("OnPart", function(user, channel)
 	CHANNELS[channel] = CHANNELS[channel] or { }
 	CHANNELS[channel][user] = true
 	print(("%s left %s"):format(user.nick, channel))
+	DO_LOG { channel=channel, nick="*part", message=user.nick}
 end)
 
-
+IRC:hook("OnTopic", function(channel, topic)
+	DO_LOG { channel=channel, nick="*topic", message=topic}
+end)
 
 
 print("Loading command parser")

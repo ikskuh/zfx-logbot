@@ -43,18 +43,6 @@ function HTTP_reply(myserver, stream) -- luacheck: ignore 212
 	local req_method = req_headers:get ":method"
 	local req_url = http_util.decodeURIComponent(req_headers:get(":path"))
 
-	-- Log request to stdout
-	--[[
-	assert(io.stdout:write(string.format('[%s] "%s %s HTTP/%g"  "%s" "%s"\n',
-		os.date("%d/%b/%Y:%H:%M:%S %z"),
-		req_method or "",
-		req_headers:get(":path") or "",
-		stream.connection.version,
-		req_headers:get("referer") or "-",
-		req_headers:get("user-agent") or "-"
-	)))
-	]]
-
 	-- Build response headers
 	local res_headers = http_headers.new()
 	res_headers:append(":status", "200")
@@ -62,8 +50,15 @@ function HTTP_reply(myserver, stream) -- luacheck: ignore 212
 		if req_url == "/style.css" then
 			res_headers:append("content-type", "text/css")
 			-- Send headers to client; end the stream immediately if this was a HEAD request
-			assert(stream:write_headers(res_headers, req_method == "HEAD"))
+			assert(stream:write_headers(res_headers, false))
 			assert(stream:write_chunk(slurp("style.css"), true))
+			return
+		end
+		if req_url == "/favicon.ico" then
+			res_headers:append("content-type", "image/x-icon")
+			-- Send headers to client; end the stream immediately if this was a HEAD request
+			assert(stream:write_headers(res_headers, false))
+			assert(stream:write_chunk(slurp("favicon.ico"), true))
 			return
 		end
 
@@ -95,8 +90,11 @@ function HTTP_reply(myserver, stream) -- luacheck: ignore 212
 			printer = function()
 				webprint('<h2>', date, '</h2>\n')
 				webprint "<p>\n"
+
 				for row in get_log_stmt:bind{ channel=chan, date=date }:rows(query) do
 					local ts = row["timestamp"]
+					local message = row["message"]
+					local nick = row["nick"]
 					local year, month, day, hour, minute, second = ts:match("^(%d+)-(%d+)-(%d+) (%d+):(%d+):(%d+)$")
 
 					local id = ("%02d:%02d:%02d"):format(hour, minute, second)
@@ -107,22 +105,37 @@ function HTTP_reply(myserver, stream) -- luacheck: ignore 212
 							hour, minute, second
 					))
 
-					local action = row["message"]:match("^\001ACTION%s+(.*)\001$")
-					if action then
-						webprint(('<span class="action">%s %s</span><br />'):format(
-							row["nick"],
-							action
+					if nick == "*part" then
+						webprint(('<span class="status">%s left the channel</span>'):format(
+							message
+						))
+					elseif nick == "*join" then
+						webprint(('<span class="status">%s joined the channel</span>'):format(
+							message
+						))
+					elseif nick == "*topic" then
+						webprint(('<span class="status">The topic was changed to: %s</span>'):format(
+							message
 						))
 					else
-						webprint(('<span class="nick">%s</span>: '):format(
-								row["nick"]
+
+						local action = message:match("^\001ACTION%s+(.*)\001$")
+						if action then
+							webprint(('<span class="action">%s %s</span>'):format(
+								nick,
+								action
 							))
-						webprint(('<span class="text">%s</span><br />'):format(
-								row["message"]
-							))
+						else
+							webprint(('<span class="nick">%s</span>: '):format(
+									nick
+								))
+							webprint(('<span class="text">%s</span>'):format(
+									message
+								))
+						end
 					end
 
-					webprint "\n"
+					webprint "<br />\n"
 				end
 				webprint "</p>\n"
 			end

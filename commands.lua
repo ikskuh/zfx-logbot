@@ -152,7 +152,7 @@ function command.say(...)
 		list = tostring(list) .. " " .. tostring(cmd)
 	end
 	if #list > 0 then
-		IRC:sendChat(target, list:sub(2))
+		context:sendto(target, list:sub(2))
 	end
 end
 

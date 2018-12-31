@@ -12,5 +12,6 @@ return {
 		nick = "zfx-logger-v3-indev",
 		username = "zfx-logger",
 		realname = "log.mq32.de"
-	}
+	},
+	admintoken = "admin",
 }
