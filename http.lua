@@ -109,7 +109,7 @@ function HTTP_reply(myserver, stream) -- luacheck: ignore 212
 
 					local action = row["message"]:match("^\001ACTION%s+(.*)\001$")
 					if action then
-						webprint(('<span class="action">%s %s</span>'):format(
+						webprint(('<span class="action">%s %s</span><br />'):format(
 							row["nick"],
 							action
 						))
