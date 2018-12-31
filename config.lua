@@ -1,0 +1,6 @@
+return {
+	channels = {
+		"#zfx",
+		"#lost",
+	}
+}
