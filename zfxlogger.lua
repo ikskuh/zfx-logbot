@@ -1,24 +1,27 @@
 require "irc"
 
-function table.pack(a, ...)
-	if not a then
-		return { }
-	else
-		local t = table.pack(...)
-		table.insert(t, 1, a)
-		return t
+-- Lua 5.1 compatibility:
+if _VERSION == "Lua 5.1" then
+	function table.pack(a, ...)
+		if not a then
+			return { }
+		else
+			local t = table.pack(...)
+			table.insert(t, 1, a)
+			return t
+		end
 	end
-end
 
-function table.unpack(t, n)
-	n = n or 1
-	if n > #t then
-		return
-	end
-	if n == #t then
-		return t[n]
-	else
-		return t[n], table.unpack(t, n + 1)
+	function table.unpack(t, n)
+		n = n or 1
+		if n > #t then
+			return
+		end
+		if n == #t then
+			return t[n]
+		else
+			return t[n], table.unpack(t, n + 1)
+		end
 	end
 end
 
@@ -27,12 +30,39 @@ local sleep = require "socket".sleep
 local http_server = require "http.server"
 local http_headers = require "http.headers"
 
-DB = sqlite3.open(arg[1] or "chatlog.db3")
-IRC = irc.new {
+local cfg = dofile("config.lua")
+
+if not cfg then
+	print("Failed to initialize logger: no config.lua present!")
+	return
+end
+
+DB = sqlite3.open(arg[1] or cfg.database or "chatlog.db3")
+
+do
+	local name = DB:first_row [[
+		SELECT name
+			FROM sqlite_master
+			WHERE type='table' AND name='chatlog'
+	]]
+	if not name or name == "" then
+		DB:exec [[
+			CREATE TABLE `chatlog` (
+				`channel`	TEXT NOT NULL,
+				`nick`	TEXT NOT NULL,
+				`message`	TEXT NOT NULL,
+				`timestamp`	DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		);
+		]]
+	end
+end
+
+IRC = irc.new(cfg.botname or {
 	nick = "zfx-logger-v3",
 	username = "zfx-logger",
 	realname = "log.mq32.de"
-}
+})
+
 CHANNELS = { }
 STORAGE  = { }
 QUIT     = false
@@ -108,8 +138,6 @@ end)
 
 
 
-local cfg = dofile("config.lua")
-
 print("Loading command parser")
 dofile("parse-cmd.lua")
 
@@ -123,8 +151,8 @@ dofile("http.lua")
 
 print("Starting HTTP server")
 HTTP = assert(http_server.listen {
-	host = "localhost";
-	port = 8080;
+	host = cfg.http_server or "localhost";
+	port = cfg.http_port or 8080;
 	onstream = function(myserver, stream)
 		HTTP_reply(myserver, stream)
 	end;
@@ -145,7 +173,7 @@ do
 end
 
 print("Connecting...")
-IRC:connect("irc.euirc.net")
+IRC:connect(cfg.irc_server, cfg.irc_port)
 
 for _,chan in ipairs(cfg.channels) do
 	print("Joining " .. chan .. "...")
@@ -160,7 +188,8 @@ while not QUIT do
 	sleep(0.01)
 end
 
-
+IRC:disconnect("Restarting...");
+DB:close()
 
 
 --[[

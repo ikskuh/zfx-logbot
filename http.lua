@@ -89,6 +89,8 @@ function HTTP_reply(myserver, stream) -- luacheck: ignore 212
 		end
 		local chan, date = req_url:match("^/(#%w+)/(%d+-%d+-%d+)/?$")
 		if chan and date then
+			-- DISPLAY THE LOGS HERE
+
 			vars.title = "IRC Logs for " .. chan
 			printer = function()
 				webprint('<h2>', date, '</h2>\n')
@@ -105,13 +107,20 @@ function HTTP_reply(myserver, stream) -- luacheck: ignore 212
 							hour, minute, second
 					))
 
-					webprint(('<span class="nick">%s</span>: '):format(
+					local action = row["message"]:match("^\001ACTION%s+(.*)\001$")
+					if action then
+						webprint(('<span class="action">%s %s</span>'):format(
 							row["nick"],
-							row["message"]
+							action
 						))
-					webprint(('<span class="text">%s</span><br />'):format(
-							row["message"]
-						))
+					else
+						webprint(('<span class="nick">%s</span>: '):format(
+								row["nick"]
+							))
+						webprint(('<span class="text">%s</span><br />'):format(
+								row["message"]
+							))
+					end
 
 					webprint "\n"
 				end
@@ -120,6 +129,7 @@ function HTTP_reply(myserver, stream) -- luacheck: ignore 212
 		else
 			chan = req_url:match("^/(#%w+)/?$")
 			if chan then
+				-- DISPLAY THE DAYS HERE
 				vars.title = "IRC Logs for " .. chan
 				printer = function()
 					webprint "<ul>\n"
@@ -138,6 +148,7 @@ function HTTP_reply(myserver, stream) -- luacheck: ignore 212
 					webprint "</ul>\n"
 				end
 			else
+				-- DISPLAY THE CHANNELS HERE
 				vars.title = "IRC Logs on masterq32.de"
 				printer = function()
 					webprint "<ul>\n"
