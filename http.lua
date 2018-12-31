@@ -126,7 +126,29 @@ function HTTP_reply(myserver, stream) -- luacheck: ignore 212
 								action
 							))
 						else
-							webprint(('<span class="nick">%s</span>: '):format(
+							local function clamp(m)
+								if m < 0.0 then
+									return 0.0
+								elseif m > 1.0 then
+									return 1.0
+								else
+									return m
+								end
+							end
+
+							local r = (nick:sub(1,1):byte() or 0xFF) / 255.0
+							local g = (nick:sub(2,2):byte() or 0xFF) / 255.0
+							local b = (nick:sub(3,3):byte() or 0xFF) / 255.0
+
+							local s = 0.5 / (r + g + b);
+							r  = clamp(r / s)
+							g  = clamp(g / s)
+							b  = clamp(1.0 - r * g)
+
+							webprint(('<span class="nick" style="color: #%02X%02X%02X">%s</span>: '):format(
+									math.floor(255.0 * r),
+									math.floor(255.0 * g),
+									math.floor(255.0 * b),
 									nick
 								))
 							webprint(('<span class="text">%s</span>'):format(
