@@ -94,6 +94,11 @@ end
 
 IRC:hook("OnChat", function(_user, _channel, _message)
 	local function process(user, channel, message)
+		-- ignore CTCP
+		if message:sub(1,1) == "\001" then
+			return
+		end
+
 		-- if private chat and message is not a command
 		if channel == IRC.nick and message:sub(1,1) ~= "!" then
 			message = "!" .. message

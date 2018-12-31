@@ -121,7 +121,7 @@ function parse_and_exec_cmd(user, channel, message)
 				end
 			end
 		else
-			context:echo("Command " .. cmd .. " not found!")
+			context:echo("Command " .. cmd .. " not found. Try \"!help\"")
 		end
 	end
 end
