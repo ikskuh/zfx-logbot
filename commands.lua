@@ -96,29 +96,38 @@ function command.part(chan)
 end
 --]]
 
-define_help("coffee",
-	"coffee        - The bot gives the invoker a cup of coffee",
-	"coffee [nick] - The bot gives [nick] a cup of coffee"
-)
-function command.coffee(user)
-	if not user then
-		context:self("gives ", context.user.nick, " a cup of coffee!")
-	else
-		context:self("gives ", user, " a coffee!")
+local function make_giver(cmd, text)
+	define_help(cmd,
+		("%s        - The bot gives the invoker a %s"):format(cmd, cmd),
+		("%s [nick] - The bot gives [nick] a %s"):format(cmd, cmd)
+	)
+	command[cmd] = function (user)
+		local msg = text
+		if type(msg) == "table" then
+			msg = msg[math.random(#msg)]
+		end
+		if not user then
+			context:self(msg:format(context.user.nick))
+		else
+			context:self(msg:format(user))
+		end
 	end
 end
 
-define_help("beer",
-	"beer        - The bot gives the invoker a jug of beer",
-	"beer [nick] - The bot gives [nick] a cup of coffee"
-)
-function command.beer(user)
-	if not user then
-		context:self("gives ", context.user.nick, " a jug of beer!")
-	else
-		context:self("gives ", user, " a jug of beer!")
-	end
-end
+make_giver("coffee", "gives %s a cup of coffee!")
+make_giver("tea", {
+	"gives %s a cup of finest tea!",
+	"gives %s a cup of earl gray!",
+	"gives %s a cup of green tea!",
+})
+make_giver("cookie", {
+	"gives %s a cookie!",
+	"gives %s a chocolate cookie!",
+	"gives %s an oat cookie!",
+	"gives %s a cookie with smarties!",
+})
+make_giver("beer", "gives %s a jug of beer!")
+make_giver("mate", "gives %s a bottle of ClubMate!")
 
 define_help("suicide",
 	"suicide - Helps a user with their suicide"
