@@ -64,19 +64,27 @@ function command.fortune()
 end
 
 define_help("rng",
-	"rng              - gives a random number between 0.0 and 1.0",
-	"rng [top]        - gives a random integer between 1 and [top].",
-	"rng [low] [high] - gives a random integer between [low] and [high]."
+	"rng                 - gives a random number between 0.0 and 1.0",
+	"rng [top]           - gives a random integer between 1 and [top].",
+	"rng [low] [high]    - gives a random integer between [low] and [high].",
+	"rng [str1] [str2] … - gives a random item from the list of strings."
 )
-function command.rng(a, b)
-	if a and b then
-		context:echo(math.random(a, b))
-	elseif a and not b then
-		context:echo(math.random(a))
+function command.rng(a, b, ...)
+	if not tonumber(a) then
+		local t = { a, b, ... }
+		context:echo(t[math.random(#t)])
 	else
-		context:echo(math.random())
+		if a and b then
+			context:echo(math.random(a, b))
+		elseif a and not b then
+			context:echo(math.random(a))
+		else
+			context:echo(math.random())
+		end
 	end
 end
+
+command.rnd = command.rng
 
 --[[
 define_help("join",
@@ -192,9 +200,9 @@ function command.remember(where, ...)
 		STORAGE[where] = what
 	else
 		if not where then
-			where = context.log[1].sender
+			where = context.log[2].sender
 		end
-		STORAGE[where] = context.log[1].message
+		STORAGE[where] = context.log[2].message
 	end
 end
 
