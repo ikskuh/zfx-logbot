@@ -1,10 +1,10 @@
 version: '3'
 services:
   logbot:
-    build: .        # Benutze lokales Verzeichnis als Quelle für das Docker Image (Dockerfile)
+    build: .        
     ports:
-      - "1234:8000" # Host-Port 1234 auf Container 8000
+      - "127.0.0.1:9004:8000"
     volumes:
-      - "/home/felix/projects/zfx-logbot:/mnt" # Binde Hostverzeichnis:Containervolume
+      - "/opt/zfx-logbot:/mnt"
     environment:
       - "LUA_PATH=./?/init.lua;./?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/share/lua/5.1/?/init.lua;/usr/local/lib/lua/5.1/?.lua;/usr/local/lib/lua/5.1/?/init.lua"

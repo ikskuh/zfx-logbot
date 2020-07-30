@@ -173,8 +173,8 @@ dofile("http.lua")
 
 print("Starting HTTP server")
 HTTP = assert(http_server.listen {
-	host = cfg.http_server or "localhost";
-	port = cfg.http_port or 8080;
+	host = "0.0.0.0"; -- cfg.http_server or "localhost";
+	port = 8000; -- cfg.http_port or 8080;
 	onstream = function(myserver, stream)
 		HTTP_reply(myserver, stream)
 	end;
@@ -190,8 +190,7 @@ HTTP = assert(http_server.listen {
 -- Manually call :listen() so that we are bound before calling :localname()
 assert(HTTP:listen())
 do
-	local bound_port = select(3, HTTP:localname())
-	print(string.format("Now listening on port %d\n", bound_port))
+	print("Now listening on", HTTP:localname())
 end
 
 print("Connecting...")
