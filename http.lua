@@ -51,14 +51,14 @@ function HTTP_reply(myserver, stream) -- luacheck: ignore 212
 			res_headers:append("content-type", "text/css")
 			-- Send headers to client; end the stream immediately if this was a HEAD request
 			assert(stream:write_headers(res_headers, false))
-			assert(stream:write_chunk(slurp("style.css"), true))
+			assert(stream:write_chunk(slurp("./data/style.css"), true))
 			return
 		end
 		if req_url == "/favicon.ico" then
 			res_headers:append("content-type", "image/x-icon")
 			-- Send headers to client; end the stream immediately if this was a HEAD request
 			assert(stream:write_headers(res_headers, false))
-			assert(stream:write_chunk(slurp("favicon.ico"), true))
+			assert(stream:write_chunk(slurp("./data/favicon.ico"), true))
 			return
 		end
 
@@ -230,14 +230,14 @@ function HTTP_reply(myserver, stream) -- luacheck: ignore 212
 			webprint '</nav>'
 		end
 
-		webprint(patch(slurp("html-prefix.htm"), vars))
+		webprint(patch(slurp("./data/html-prefix.htm"), vars))
 		webprint(('<!-- %s -->'):format(req_url))
 		nav()
 		webprint '<hr />'
 		printer()
 		webprint '<hr />'
 		nav()
-		webprint(patch(slurp("html-postfix.htm"), vars))
+		webprint(patch(slurp("./data/html-postfix.htm"), vars))
 		assert(stream:write_chunk("\n", true))
 	end
 end

@@ -1,5 +1,12 @@
 require "irc"
 
+local _print = print
+print = function(...)
+  _print(...)
+  io.stdout:flush()
+  io.stderr:flush()
+end
+
 -- Lua 5.1 compatibility:
 if _VERSION == "Lua 5.1" then
 	function table.pack(a, ...)
@@ -184,7 +191,7 @@ HTTP = assert(http_server.listen {
 assert(HTTP:listen())
 do
 	local bound_port = select(3, HTTP:localname())
-	assert(io.stderr:write(string.format("Now listening on port %d\n", bound_port)))
+	print(string.format("Now listening on port %d\n", bound_port))
 end
 
 print("Connecting...")
